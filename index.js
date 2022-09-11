@@ -24,7 +24,10 @@ io.on('connection', function(socket) {
     socket.on('join', function(data) {
         console.log('A client joined the game:', data.message, " uuid: ", data.player_id);
         players.push(data);
-        io.to('game-updates').emit("join", {data: data, players: players, leaderboard: leaderboard});
+        io.to('game-updates').emit("join", {data: data, 
+            players: players, 
+            leaderboard: leaderboard,
+            game_state: game_state});
     });
 
     socket.on('player_update', function(data){
@@ -47,18 +50,25 @@ io.on('connection', function(socket) {
 
     // A player finishes the race!
     socket.on('player-finishes', function(data){
+        console.log("Player finished: ")
+        console.log(data)
         // game not over
         if(game_state == "playing"){
             leaderboard.push(data);
-            let finished_count = 0;
+            console.log("playing?")
             // increase finished count
             for(let i = 0; i < players.length; i++){
-                if(data.uuid == players[i].player_id){
-                    finished_count++;
+                console.log(players[i]);
+                if(players[i] != undefined){
+                    if(data.uuid == players[i].player_id){
+                        console.log("A player finshed! " + data.player_name)
+                        
+                    }
                 }
             }
+            console.log("Finished count: " + leaderboard.length + " players len: " + players.length)
             // check if game over
-            if(finished_count == players.length){
+            if(leaderboard.length == players.length){
                 game_state = "ended";
                 io.to('game-updates').emit('game_over', leaderboard);
             } else{
@@ -74,11 +84,19 @@ io.on('connection', function(socket) {
         for(let i = 0; i < players.length; i++){
             if (players[i] != null && players[i].player_id == data.player_id){
                 io.to('game-updates').emit("quit", {player_id: data.player_id});
-                delete players[i];
+                players.splice(i, 1);
                 console.log("player deleted");
             }
         }
     })
+
+    socket.on("game-restart", function(data){
+        console.log("Restarting game")
+        game_state = "playing";
+        players = [];
+        leaderboard = [];
+        io.to('game-updates').emit('restart-game');
+    });
     /*
     socket.on('whos-online', function(data){
         console.log("Sending who's online")

@@ -1,5 +1,5 @@
 var canvas = document.getElementById("renderCanvas");
-let uuid = crypto.randomUUID();
+let uuid = "";
 
 var engine = null;
 var scene = null;
@@ -20,9 +20,9 @@ socket.on('connection', function(){
     socket.join('game-updates');
     
 })
+var player_name = "";
 
 var createDefaultEngine = function() { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true,  disableWebGL2Support: false}); };
-
 
 function createHouse(position, scene){
     const box = BABYLON.MeshBuilder.CreateBox("box", {});
@@ -178,6 +178,22 @@ function updateNetworkPlayerName(uuid, name){
     }
 }
 
+function updateLeaderboard(leaderboard){
+    let lb_html = "<ul>\n"
+    for(let i = 0; i < leaderboard.length; i++){
+        let player_name = leaderboard[i].player_name;
+        let lb_item = "<li>" + (i+1).toString(10) + " - " + player_name + "</li>\n"
+        lb_html += lb_item
+    }
+    lb_html += "</ul>\n"
+    console.log(lb_html)
+    document.getElementById("leaderboard-players").innerHTML = lb_html;
+}
+
+function playTada(){
+    console.log("tada!");
+}
+
 function loadCat(position, scene, name){
     const collBox = BABYLON.MeshBuilder.CreateBox("hero-col-box", {width: 0.4, height: 0.2, depth: 0.4});
     collBox.physicsImpostor = new BABYLON.PhysicsImpostor(collBox, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 10, friction: 10, restitution: 0.01 }, scene);
@@ -196,6 +212,7 @@ function loadCat(position, scene, name){
     
 
     var last_pos = collBox.position.clone();
+    let collided_with_win_obj = false;
 
     var cat_scream = new BABYLON.Sound("gunshot", "res/snd/415209__inspectorj__cat-screaming-a.wav", scene);
     //collBox.rotate(new BABYLON.Vector3(0, 1, 0), Math.PI/2);
@@ -208,6 +225,7 @@ function loadCat(position, scene, name){
         var heroSpeedBackwards = 0.1;
         var heroRotationSpeed = 0.1;
         let jumpForce = 55;
+        
 
         var label_pos = position.clone();
         label_pos.y += 0.3;
@@ -220,7 +238,8 @@ function loadCat(position, scene, name){
         // Name gets set
         document.getElementById("name-ok").onclick = function(){
             let name = document.getElementById("name-field").value
-            updateLabelText(ground_mat,name )
+            updateLabelText(ground_mat,name)
+            player_name = name;
             document.getElementById("start-container").style.display = "none";
             socket.emit('update_name', {name: name, uuid: uuid});
         }
@@ -274,9 +293,10 @@ function loadCat(position, scene, name){
                 }
             }
             if(win_obj != null){
-                if(collBox.intersectsMesh(win_obj)){
-                    socket.emit("player-win", uuid);
+                if(collBox.intersectsMesh(win_obj) && !collided_with_win_obj){
+                    socket.emit("player-finishes", {player_name: player_name, player_id:uuid});
                     document.getElementById("win-scr-container").style.visibility = "visible";
+                    collided_with_win_obj = true;
                     return;
                 }
             }
@@ -403,7 +423,6 @@ function registerCats(_players){
                     found = true;
                 }
             }
-            
         }
         if(!found && _players[i] != null){
             registerCat(_players[i].player_id, _players[i].player_name);
@@ -1166,6 +1185,8 @@ var startRenderLoop = function (engine, canvas) {
     });
 }      
 
+
+
 window.initFunction = async function() {
            
     var asyncEngineCreation = async function() {
@@ -1185,6 +1206,47 @@ window.initFunction = async function() {
 
 initFunction().then(() => {scene.then(returnedScene => { sceneToRender = returnedScene; });});
 
+function setCookie(cname, cvalue, exdays) {
+    const d = new Date();
+    d.setTime(d.getTime() + (exdays*24*60*60*1000));
+    let expires = "expires="+ d.toUTCString();
+    document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+}
+function getCookie(cname) {
+    let name = cname + "=";
+    let decodedCookie = decodeURIComponent(document.cookie);
+    let ca = decodedCookie.split(';');
+    for(let i = 0; i <ca.length; i++) {
+      let c = ca[i];
+      while (c.charAt(0) == ' ') {
+        c = c.substring(1);
+      }
+      if (c.indexOf(name) == 0) {
+        return c.substring(name.length, c.length);
+      }
+    }
+    return "";
+  }
+
+// Cookies om nom
+let cookie_name = getCookie("player_name");
+let cookie_uuid = getCookie("player_id");
+if(cookie_name != ""){
+    player_name = cookie_name;
+    document.getElementById("start-container").style.visibility = "hidden";
+}
+if(cookie_uuid != ""){
+    uuid = cookie_uuid;
+} else {
+    uuid = crypto.randomUUID();
+}
+
+function showWinnerBox(winner){
+    // Show winner box
+    document.getElementById("other-win-container").style.visibility = "visible";
+    document.getElementById("winner-header").textContent = "Game over. " + winner + " wins!";
+}
+
 // SOCKETS
 // Join!
 join_data = {message: "Hello", player_id: uuid, player_name: "Test Player" };
@@ -1192,17 +1254,20 @@ socket.emit("join", join_data)
 
 // A player updates
 socket.on("player_update", function(data){
-    //console.log(data);
     updateDummyCat(data.uuid, data.position, data.rotation);
 });
 
-// Not needed?
+// A player joins (including self) - Get all players
 socket.on("join", function(data){
     console.log("Other player joined");
-    //registerCat(data.data.player_id);
     registerCats(data.players);
+    let game_state = data.game_state;
+    if(game_state == "ended"){
+        showWinnerBox(data.leaderboard[0].player_name)
+    }
 })
 
+// Remove a player if they leave
 socket.on("quit", function(data){
     console.log("other player quit");
     unregisterCat(data.player_id);
@@ -1212,25 +1277,46 @@ socket.on('current_players', function(data){
     console.log("Checking players");  
 })
 
+// Player sets name, update uuid
 socket.on('new_name', function(data){
     updateNetworkPlayerName(data.uuid, data.name);
 })
 
+// Player finished - update leaderboard
 socket.on('player_finished', function(data){
     let leaderboard = data;
     updateLeaderboard(leaderboard);
     playTada();
 })
 
+// On game over (all players finish) - show game over box
 socket.on('game_over', function(data){
     let leaderboard = data;
     updateLeaderboard(leaderboard);
     playTada();
-    // TODO: show reload page button
+    let winner = leaderboard[0].player_name;
+    showWinnerBox(winner);
+})
+
+// Reload window when game restarted
+socket.on("restart-game", function(data){
+    window.location.reload();
 })
 
 // On Quit
 addEventListener('beforeunload', (event) => {socket.emit("quit", {player_id: uuid})});
+
+// On game restart click btn
+document.getElementById("restart-ok").onclick = function(){
+    socket.emit('game-restart', {});
+    window.location.reload();
+}
+
+/* TESTING 
+setTimeout(function(){
+    socket.emit('player-finishes', {player_name: player_name, uuid: uuid})
+}, 4000); */
+
 
 
 // Resize

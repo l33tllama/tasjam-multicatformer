@@ -9,6 +9,7 @@ const tile_types = {
 
 const level_1_start_pos = [7, 5];
 const level_1_end_pos = [0, 1];
+//const level_1_end_pos = [7, 5];
 
 const building_heights = [
     [0, 0, 0, 0, 0, 0, 0, 0],
