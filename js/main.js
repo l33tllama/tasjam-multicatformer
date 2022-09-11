@@ -15,6 +15,7 @@ var win_obj = null;
 var godmode = false;
 var players = [];
 var cat_mesh = null;
+var tadasnd = null
 var socket = io.connect('/');
 socket.on('connection', function(){
     socket.join('game-updates');
@@ -195,8 +196,13 @@ function updateLeaderboard(leaderboard){
     document.getElementById("leaderboard-players").innerHTML = lb_html;
 }
 
+function loadTada(scene){
+    var tadafn = "res/snd/Ta Da-SoundBible.com-1884170640.wav"
+    tadasnd = new BABYLON.Sound("gunshot", tadafn, scene);
+}
+
 function playTada(){
-    console.log("tada!");
+    tadasnd.play()
 }
 
 function loadCat(position, scene, name){
@@ -265,6 +271,11 @@ function loadCat(position, scene, name){
 
         //Get the Samba animation Group
         const walkAnim = scene.getAnimationGroupByName("WalkAttempt2");
+        let walkanimgroup = null;
+        for(let i = 0; i < animationGroups.length; i++){
+            if(animationGroups[i].name == "WalkAttempt2");
+            walkanimgroup = animationGroups[i];
+        }
 
         hero.position.y = -0.1;        
 
@@ -360,6 +371,7 @@ function loadCat(position, scene, name){
                     animating = true;
                     if (inputMap["s"]) {
                         //Walk backwards
+                        walkanimgroup.play()
                         //walkBackAnim.start(true, 1.0, walkBackAnim.from, walkBackAnim.to, false);
                     }
                     else if
@@ -371,6 +383,7 @@ function loadCat(position, scene, name){
                         //Walk
                        // walkAnim.start(true, 1.0, walkAnim.from, walkAnim.to, false);
                        console.log("Walking")
+                       walkanimgroup.play()
                        walkAnim.start(true, 1.6, walkAnim.from, walkAnim.to, false);
                     }
                 }
@@ -383,7 +396,8 @@ function loadCat(position, scene, name){
     
                     //Stop all animations besides Idle Anim when no key is down
                     //sambaAnim.stop();
-                    walkAnim.stop();
+                    //walkAnim.stop();
+                    walkanimgroup.stop();
                     //walkBackAnim.stop();
     
                     //Ensure animation are played only once per rendering loop*/
@@ -499,7 +513,7 @@ function loadDummyCat(_uuid, scene, mesh){
         
 
         //Get the Samba animation Group
-        const walkAnim = scene.getAnimationGroupByName("WalkAttempt2");
+        //const walkAnim = scene.getAnimationGroupByName("WalkAttempt2");
 
         hero.position.y = -0.1;
         hero.addRotation(BABYLON.Vector3(0, Math.PI/2, 0));
@@ -1162,6 +1176,7 @@ var createScene = async function () {
 
     generateLevel(scene);
     generateDummyCats(scene, _cat_mesh);
+    loadTada(scene);
 
     //var ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 100, height: 100}, scene);
     //var ground = BABYLON.Mesh.CreateGround("ground", 100, 100, 2, scene);
@@ -1340,10 +1355,11 @@ function resetGame(){
     window.location.reload();
 }
 
-/* TESTING 
+/* TESTING  
 setTimeout(function(){
     socket.emit('player-finishes', {player_name: player_name, uuid: uuid})
-}, 4000); */
+    playTada();
+}, 4000);  */
 
 // Resize
 window.addEventListener("resize", function () {
