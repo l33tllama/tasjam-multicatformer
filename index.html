@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset='utf-8'>
+        <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+        <meta name='viewport' content='width=device-width, initial-scale=1'>
+        <title>TasJam</title>
+        <!-- <link rel='stylesheet' type='text/css' media='screen' href='main.css'> -->
+        <style type="text/css">
+            html, body {
+                overflow: hidden;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            #container{
+                width: 100%;
+                height: 100%;
+                position: relative;
+            }
+            #renderCanvas {
+                width: 100%;
+                height: 100%;
+                touch-action: none;
+            }
+            #win-scr-container{
+                top: 40%;
+                left: 45%;
+                position: absolute;
+                z-index: 10 !important;
+                /* width: 100%; */
+                /* height: 100%; */
+                background-color: azure;
+                text-align: center;
+                visibility: hidden;
+            }
+            #start-container{
+                top: 40%;
+                left: 45%;
+                position: absolute;
+                z-index: 10 !important;
+                /* width: 100%; */
+                /* height: 100%; */
+                background-color: azure;
+                text-align: center;
+            }
+            #leaderboard-container{
+                right: 1%;
+                top: 1%;
+                /* left: 1%; */
+                position:absolute;
+                z-index: 10 !important;
+                background-color: rgba(255, 255, 255, 0.6);
+                min-width: 320px;
+                min-height: 160px;
+                padding: 6px;
+            }
+            #win-scr-container h1{
+                margin: 0 auto;
+            }
+            #ok{
+                text-align: center;
+            }
+        </style>
+        <script src="https://preview.babylonjs.com/cannon.js"></script>
+        
+        <!-- official 
+        <script src="https://cdn.babylonjs.com/babylon.js"></script>
+        <script src="https://cdn.babylonjs.com/babylon.max.js"></script>
+
+        <script src="https://cdn.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+        <script src="https://cdn.babylonjs.com/materialsLibrary/babylonjs.materials.js"></script>
+
+        <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+        <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.js"></script>
+
+        <script src="https://cdn.babylonjs.com/postProcessesLibrary/babylonjs.postProcess.min.js"></script>
+        <script src="https://cdn.babylonjs.com/postProcessesLibrary/babylonjs.postProcess.js"></script>
+
+        <script src="https://cdn.babylonjs.com/proceduralTexturesLibrary/babylonjs.proceduralTextures.min.js"></script>
+        <script src="https://cdn.babylonjs.com/proceduralTexturesLibrary/babylonjs.proceduralTextures.js"></script>
+
+        <script src="https://cdn.babylonjs.com/serializers/babylonjs.serializers.min.js"></script>
+        <script src="https://cdn.babylonjs.com/serializers/babylonjs.serializers.js"></script>
+
+        <script src="https://cdn.babylonjs.com/gui/babylon.gui.min.js"></script>
+        <script src="https://cdn.babylonjs.com/gui/babylon.gui.js"></script>
+
+        <script src="https://cdn.babylonjs.com/inspector/babylon.inspector.bundle.js"></script>
+        <script src="https://cdn.babylonjs.com/inspector/babylon.inspector.bundle.max.js"></script>
+
+        <script src="https://cdn.babylonjs.com/viewer/babylon.viewer.js"></script>  
+        <script src="https://cdn.babylonjs.com/viewer/babylon.viewer.max.js"></script>
+        -->
+        <!-- Babylon.js preview  -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.6.2/dat.gui.min.js"></script>
+        <script src="https://assets.babylonjs.com/generated/Assets.js"></script>
+        <script src="https://preview.babylonjs.com/ammo.js"></script>
+        <script src="https://preview.babylonjs.com/cannon.js"></script>
+        <script src="https://preview.babylonjs.com/Oimo.js"></script>
+        <script src="https://preview.babylonjs.com/earcut.min.js"></script>
+        <script src="https://preview.babylonjs.com/babylon.js"></script>
+        <script src="https://preview.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+        <script src="https://preview.babylonjs.com/proceduralTexturesLibrary/babylonjs.proceduralTextures.min.js"></script>
+        <script src="https://preview.babylonjs.com/postProcessesLibrary/babylonjs.postProcess.min.js"></script>
+        <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.js"></script>
+        <script src="https://preview.babylonjs.com/serializers/babylonjs.serializers.min.js"></script>
+        <script src="https://preview.babylonjs.com/gui/babylon.gui.min.js"></script>
+        <script src="https://preview.babylonjs.com/inspector/babylon.inspector.bundle.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+    </head>
+    <body>
+        <div id="container">
+            <canvas id="renderCanvas"></canvas>
+            <div id="start-container">
+                <h2>Enter your name</h2>
+                <input type="text" id="name-field">
+                <input type="button" value="OK" id="name-ok">
+            </div>
+            <div id="leaderboard-container">
+                <h3>Finished Leaderboard</h3>
+                <div id="leaderboard-players"></div>
+            </div>
+            <div id="win-scr-container">
+                <h1>You Win!</h1>
+                <button id="win-ok">OK - Reload page</button>
+            </div>
+        </div>
+        <script src='js/level.js'></script>
+        <script src='js/main.js'></script>  
+    </body>
+</html>
