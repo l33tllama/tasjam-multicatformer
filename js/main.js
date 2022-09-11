@@ -322,7 +322,6 @@ function loadCat(position, scene, name){
             }
             if (inputMap["d"]) {
                 collBox.rotate(BABYLON.Vector3.Up(), heroRotationSpeed);
-                
                 keydown = true;
             }
             if (inputMap["b"]) {
@@ -371,6 +370,7 @@ function loadCat(position, scene, name){
                     else {
                         //Walk
                        // walkAnim.start(true, 1.0, walkAnim.from, walkAnim.to, false);
+                       console.log("Walking")
                        walkAnim.start(true, 1.6, walkAnim.from, walkAnim.to, false);
                     }
                 }
@@ -518,14 +518,26 @@ function loadDummyCat(_uuid, scene, mesh){
 }
 
 function updateDummyCat(_uuid, position, rotation){
+    let cat_found = false;
     for(let i = 0; i < players.length; i++){
         if(players[i] != null && players[i].uuid == _uuid){
-            console.log("updating ")
+            //console.log("updating ")
+            cat_found = true;
             players[i].object.position = position;
             if(rotation){
                 players[i].object.rotationQuaternion = rotation;
             }
         }
+    }
+    // Add a cat if it's not there for some reason.. >.<
+    if(!cat_found){
+        let cat_name = "";
+        for(let i = 0; i < players.length; i++){
+            if(players[i] != undefined && players[i].uuid == uuid){
+                cat_name = players[i].name;
+            }
+        }
+        registerCat(uuid, cat_name);
     }
 }
 function placePlayer(position, scene){
@@ -1110,7 +1122,7 @@ var createScene = async function () {
     var gravityVector = new BABYLON.Vector3(0,-9.81, 0);
     var physicsPlugin = new BABYLON.CannonJSPlugin();
     
-    camera1 = new BABYLON.ArcRotateCamera("camera1", Math.PI / 2, Math.PI/ 2.5 , 4, new BABYLON.Vector3(0, -5, 0), scene);
+    camera1 = new BABYLON.ArcRotateCamera("camera1", Math.PI/2, Math.PI/ 2.5 , 4, new BABYLON.Vector3(0, -5, 0), scene);
     //camera1 = new BABYLON.ArcRotateCamera("camera1", 0, 0, 10, new BABYLON.Vector3(0, -5, 0), scene);
     //camera1 = new BABYLON.FollowCamera("camera1", new BABYLON.Vector3(0, 0, 0), scene);
     //camera1 = new BABYLON.ArcFollowCamera("arcfollow", Math.PI / 2, Math.PI / 4, 10, null, scene);
@@ -1120,6 +1132,8 @@ var createScene = async function () {
     camera1.lowerRadiusLimit = 2;
     camera1.upperRadiusLimit = 10;
     camera1.wheelDeltaPercentage = 0.01;
+    camera1.lowerAlphaLimit = -Number.MAX_VALUE;
+    camera1.upperAlphaLimit = +Number.MAX_VALUE;
     var _cat_mesh = null
 
     _cat_mesh = await loadMesh("./meshes/", "StripeTheCat.glb", scene);
@@ -1309,8 +1323,19 @@ socket.on("restart-game", function(data){
 // On Quit
 addEventListener('beforeunload', (event) => {socket.emit("quit", {player_id: uuid})});
 
+
+
+function resetGame(){
+    socket.emit('game-restart', {});
+    window.location.reload();
+}
+
 // On game restart click btn
 document.getElementById("restart-ok").onclick = function(){
+    resetGame();
+}
+
+function resetGame(){
     socket.emit('game-restart', {});
     window.location.reload();
 }
@@ -1319,8 +1344,6 @@ document.getElementById("restart-ok").onclick = function(){
 setTimeout(function(){
     socket.emit('player-finishes', {player_name: player_name, uuid: uuid})
 }, 4000); */
-
-
 
 // Resize
 window.addEventListener("resize", function () {
